@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Профиль: {{ profile_user.username }}
+{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2>👤 {{ profile_user.username }}</h2>
+        </div>
+        <div class="card-body">
+          <p><strong>Дата регистрации:</strong> {{ profile_user.date_joined|date:"d E Y" }}</p>
+          <p><strong>Всего публикаций:</strong> {{ total_posts }}</p>  <!-- ✅ Исправлено -->
+          
+          {% if profile_user == user %}
+            <a href="{% url 'blog:create_post' %}" class="btn btn-primary btn-sm">
+              Создать публикацию
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <h3 class="mb-3">Публикации пользователя</h3>
+      
+      {% for post in page_obj %}
+        <article class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="{% url 'blog:post_detail' post.id %}">{{ post.title }}</a>
+            </h5>
+            <p class="card-text">{{ post.text|truncatewords:30 }}</p>
+            
+            <div class="text-muted small">
+              <span>📁 {{ post.category.title }}</span>
+              {% if post.location %}
+                <span> | 📍 {{ post.location.name }}</span>
+              {% endif %}
+              <span> | 💬 {{ post.comment_count|default:0 }}</span>
+              <span> | 🕐 {{ post.pub_date|date:"d E Y" }}</span>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <p class="text-muted">У пользователя пока нет опубликованных постов.</p>
+      {% endfor %}
+
+      {% include "blog/includes/paginator.html" %}
+    </div>
+  </div>
+{% endblock %}

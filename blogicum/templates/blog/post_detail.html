@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<article>
+    <h1>{{ post.title }}</h1>
+    
+    <p class="text-muted">
+        {{ post.pub_date|date:"d E Y, H:i" }} | 
+        {% if post.location and post.location.is_published %}
+            {{ post.location.name }}
+        {% else %}
+            Планета Земля
+        {% endif %}<br>
+        От автора <a href="{% url 'blog:profile' post.author.username %}">@{{ post.author.username }}</a> 
+        в категории {{ post.category.title }}
+    </p>
+    
+    {% if post.image %}
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid mb-3">
+    {% endif %}
+    
+    <div class="post-text">
+        {{ post.text|linebreaks }}
+    </div>
+    
+    <!-- Кнопки управления (только для автора) -->
+    {% if user == post.author %}
+    <div class="mt-4">
+        <a href="{% url 'blog:edit_post' post.id %}" class="btn btn-primary">
+            ✏️ Редактировать
+        </a>
+        <a href="{% url 'blog:delete_post' post.id %}" class="btn btn-danger">
+            🗑️ Удалить
+        </a>
+    </div>
+    {% endif %}
+</article>
+
+<h3>Комментарии ({{ comments.count }})</h3>
+
+<!-- Форма добавления комментария (только для авторизованных) -->
+{% if user.is_authenticated %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Добавить комментарий</h5>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.text }}
+            {% if form.text.errors %}
+            <div class="text-danger">{{ form.text.errors }}</div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary mt-2">Отправить</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<p><a href="{% url 'login' %}?next={{ request.path }}">Войдите</a>, чтобы оставить комментарий.</p>
+{% endif %}
+
+<!-- Список комментариев -->
+<div class="comments">
+    {% for comment in comments %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">
+                <a href="{% url 'blog:profile' comment.author.username %}">@{{ comment.author.username }}</a>
+                <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+            </h6>
+            <p class="card-text">{{ comment.text|linebreaks }}</p>
+            
+            <!-- Кнопки для автора комментария -->
+            {% if user == comment.author %}
+            <a href="{% url 'blog:delete_comment' comment.id %}" class="btn btn-sm btn-danger">
+                Удалить
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">Комментариев пока нет. Будьте первым!</p>
+    {% endfor %}
+</div>
+{% endblock %}
